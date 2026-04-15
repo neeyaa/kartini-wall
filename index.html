@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wall of Voices - Kartini</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: serif;
+      background-color: #f8f1e5;
+      background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='2' opacity='0.25'%3E%3Cpath d='M80 10 C55 30,55 70,80 90 C105 70,105 30,80 10Z'/%3E%3Cpath d='M80 70 C55 90,55 130,80 150 C105 130,105 90,80 70Z'/%3E%3Cpath d='M10 80 C30 55,70 55,90 80 C70 105,30 105,10 80Z'/%3E%3Cpath d='M70 80 C90 55,130 55,150 80 C130 105,90 105,70 80Z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      border: 4px solid #d4af37;
+      background: #fffaf3;
+      border-radius: 16px;
+      margin-top: 20px;
+    }
+
+    h1 { text-align: center; }
+
+    textarea, input {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      background: #d4af37;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .card {
+      margin-top: 15px;
+      padding: 12px;
+      border: 1px solid #d4af37;
+      border-radius: 10px;
+      background: #fffaf3;
+    }
+
+    .like {
+      margin-top: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Wall of Voices</h1>
+    <p style="text-align:center"><i>"Kalau aku jadi Kartini di masa kini, aku ingin..."</i></p>
+    <p style="text-align:center;font-size:12px">by garvanta Ulluvara</p>
+
+    <input id="name" placeholder="Nama (opsional)">
+    <textarea id="text" placeholder="Tulis harapanmu..."></textarea>
+    <button onclick="kirim()">Kirim</button>
+
+    <div id="list"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDU-bOKDpiIR9bv3Z2J-O9JkDfM9QoJJHI",
+      authDomain: "kartini-62b5d.firebaseapp.com",
+      projectId: "kartini-62b5d",
+      storageBucket: "kartini-62b5d.firebasestorage.app",
+      messagingSenderId: "961806231460",
+      appId: "1:961806231460:web:2222893ed9f8b438644331",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function kirim() {
+      const text = document.getElementById("text").value;
+      const name = document.getElementById("name").value || "Anonim";
+
+      if (!text) return;
+
+      db.collection("voices").add({
+        text,
+        name,
+        likes: 0,
+        createdAt: Date.now()
+      });
+
+      document.getElementById("text").value = "";
+    }
+
+    function like(id, current) {
+      db.collection("voices").doc(id).update({
+        likes: current + 1
+      });
+    }
+
+    db.collection("voices").orderBy("createdAt", "desc")
+      .onSnapshot(snapshot => {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+
+          list.innerHTML += `
+            <div class="card">
+              <div>${d.text}</div>
+              <small>— ${d.name}</small>
+              <div class="like" onclick="like('${doc.id}', ${d.likes || 0})">
+                ❤️ ${d.likes || 0}
+              </div>
+            </div>
+          `;
+        });
+      });
+  </script>
+
+</body>
+</html>
